@@ -1,0 +1,27 @@
+# Demo configuration: crawls the LOCAL fictional test-fixture site (demo/mock_site.py), NOT the real internet.
+# Purpose: show change detection, removal/expiry detection and aggregator->official discovery deterministically.
+# Everything stored in data/demo.db is flagged is_fixture=1 and excluded from the real dashboard counts by default.
+user_agent: "AtlasScholarshipBot/1.0 (demo)"
+db_path: data/demo.db
+crawl:
+  max_pages_per_run: 60
+  max_depth: 2
+  recrawl_limit: 100
+  per_domain_delay_sec: 0
+  timeout_sec: 10
+  respect_robots: true
+  expiring_soon_days: 14
+  unverifiable_after_failures: 1
+discovery:
+  enable_search: false
+  scholarship_link_keywords: [scholarship, fellowship, scheme, award, grant]
+seeds:
+  - http://127.0.0.1:8765/
+  - http://localhost:8765/aggregator       # simulated aggregator: discovery only, never a source
+sources:
+  fixture_hosts: [127.0.0.1]
+  aggregator_hosts: [localhost]
+scoring:
+  verified_threshold: 95
+llm:
+  enabled: false

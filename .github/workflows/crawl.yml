@@ -1,0 +1,18 @@
+name: scheduled-crawl
+on:
+  schedule: [{cron: "30 2 * * *"}]     # daily; the crawler is incremental (re-verifies known records + discovers new ones)
+  workflow_dispatch: {}
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q tests
+      - run: python -m atlas_crawler.cli crawl
+      - run: python -m atlas_crawler.cli stats
+      - uses: actions/upload-artifact@v4
+        with: {name: atlas-db, path: data/atlas.db}

@@ -1,0 +1,97 @@
+# Atlas Scholarship Intelligence Crawler - production configuration
+# Seeds are ENTRY POINTS for discovery, not scholarship records. Records are only created from pages the crawler
+# fetches, classifies, extracts and verifies. Unreachable seeds are reported in the crawl log.
+
+user_agent: "AtlasScholarshipBot/1.0 (education research crawler; set a contact email here)"
+db_path: data/atlas.db
+
+crawl:
+  max_pages_per_run: 150          # fresh pages fetched per run
+  max_depth: 2                    # link depth from seeds / search results
+  recrawl_limit: 300              # known records re-verified on every run
+  per_domain_delay_sec: 2.0       # politeness
+  timeout_sec: 25
+  respect_robots: true
+  allow_insecure_ssl_for: []   # many Indian gov sites ship broken cert chains; flagged + penalised
+  expiring_soon_days: 14
+  unverifiable_after_failures: 2  # consecutive failed re-verifications before NO_LONGER_VERIFIABLE
+  retry_after_hours: 6            # 5xx / timeout / 429 candidates are retried later (max 3 attempts) instead of discarded
+  use_os_trust_store: true     # set true after `pip install truststore` to fix many .gov.in certificate-chain errors
+
+discovery:
+  enable_search: true             # DuckDuckGo HTML (free). Set searxng_url to use your own SearXNG instead.
+  # searxng_url: "http://localhost:8080"
+  results_per_query: 10
+  search_queries:
+    - "scholarship for Indian students 2026-27 site:gov.in"
+    - "scholarship scheme eligibility last date apply site:gov.in"
+    - "scholarship eligibility last date apply site:ac.in"
+    - "post matric scholarship SC ST OBC minority apply last date"
+    - "AICTE scholarship scheme eligibility apply"
+    - "CSR scholarship programme India students apply foundation 2026"
+    - "scholarship for girl students India foundation apply 2026-27"
+    - "PhD fellowship Indian students official notification apply deadline"
+    - "international scholarship for Indian students government apply 2026-27"
+  scholarship_link_keywords: [scholarship, fellowship, scheme, yojana, stipend, award, grant, bursary, vidya, chhatravritti, pragati, saksham, inspire]
+
+seeds:
+  - https://scholarships.gov.in/All-Scholarships
+  - https://scholarships.gov.in/
+  - https://www.aicte-india.org/schemes/students-development-schemes
+  - https://www.ugc.gov.in/
+  - https://socialjustice.gov.in/
+  - https://tribal.nic.in/
+  - https://minorityaffairs.gov.in/
+  - https://online-inspire.gov.in/
+  - https://dst.gov.in/
+  - https://www.education.gov.in/
+  - https://www.tatatrusts.org/
+  - https://www.reliancefoundation.org/
+  - https://www.chevening.org/scholarships/
+
+# Source classification. Matching is by hostname SUFFIX only. A leading dot means "any subdomain of".
+sources:
+  fixture_hosts: []                       # only used by the demo config
+  government_suffixes: [".gov.in", ".nic.in", ".gov", ".res.in"]
+  government_hosts: [aicte-india.org, ugc.ac.in, nta.ac.in, ncert.nic.in]
+  university_suffixes: [".ac.in", ".edu.in", ".edu"]
+  csr_hosts: [tatatrusts.org, reliancefoundation.org, hdfcbank.com, kotakeducationfoundation.org, adityabirla.com,
+              adityabirlascholars.net, infosys.com, wipro.com]
+  foundation_hosts: [inlaksfoundation.org, azimpremjifoundation.org, bhartifoundation.org]
+  international_hosts: [chevening.org, usief.org.in, daad.in, daad.de, cscuk.fcdo.gov.uk, fulbrightindia.org]
+  international_suffixes: [".gov.uk", ".gov.au"]
+  aggregator_hosts: [buddy4study.com, shiksha.com, careers360.com, collegedunia.com, scholarshipsinindia.com,
+                     jagranjosh.com, adda247.com, admitkard.com, educationforallinindia.com, leverageedu.com,
+                     wikipedia.org, youtube.com, facebook.com, twitter.com, x.com, instagram.com, quora.com,
+                     linkedin.com, medium.com, reddit.com, telegram.org, t.me,
+                     timesofindia.indiatimes.com, hindustantimes.com, indiatoday.in, thehindu.com, news18.com,
+                     indianexpress.com, ndtv.com, financialexpress.com, anantamias.com, vidyasaarathi.co.in]
+
+provider_hints:       # used only when the page itself names no provider; counts as half-evidence in scoring
+  scholarships.gov.in: "National Scholarship Portal (Government of India)"
+  aicte-india.org: "All India Council for Technical Education (AICTE)"
+  ugc.gov.in: "University Grants Commission (UGC)"
+  online-inspire.gov.in: "Department of Science & Technology (INSPIRE)"
+  socialjustice.gov.in: "Ministry of Social Justice and Empowerment"
+  tribal.nic.in: "Ministry of Tribal Affairs"
+  minorityaffairs.gov.in: "Ministry of Minority Affairs"
+
+scoring:
+  verified_threshold: 95
+  ssl_unverified_factor: 0.5    # live_on_source multiplier when TLS could not be verified (caps such pages at 92.5)
+  weights:                      # must sum to 100
+    official_source: 20
+    live_on_source: 15
+    application_url: 10
+    deadline_supported: 15
+    eligibility_supported: 12
+    freshness: 5
+    no_conflicts: 5
+    extraction_consistency: 8
+    traceability: 10
+
+llm:                            # optional local LLM (Ollama). Proposes values only; every value is grounding-checked.
+  enabled: false
+  url: http://localhost:11434
+  model: llama3.1:8b
+  max_chars: 12000

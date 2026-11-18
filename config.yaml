@@ -2,7 +2,7 @@
 # Seeds are ENTRY POINTS for discovery, not scholarship records. Records are only created from pages the crawler
 # fetches, classifies, extracts and verifies. Unreachable seeds are reported in the crawl log.
 
-user_agent: "AtlasScholarshipBot/1.0 (education research crawler; set a contact email here)"
+user_agent: "AtlasScholarshipBot/1.0 (contact: riyapandey061108@gmail.com)"
 db_path: data/atlas.db
 
 crawl:
